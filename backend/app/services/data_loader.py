@@ -187,7 +187,11 @@ class DataLoaderService:
         # Let's scale card1 now so it's a normalized feature for training
         # We store the original values in a temporary column if needed, or we just split first, then scale card1
         card1_raw = df_sorted['card1'].values
-        df_sorted['card1'] = (df_sorted['card1'] - df_sorted['card1'].mean()) / df_sorted['card1'].std()
+        card1_mean = float(card1_raw.mean())
+        card1_std = float(card1_raw.std()) if len(card1_raw) > 1 else 1.0
+        import joblib
+        joblib.dump({"mean": card1_mean, "std": card1_std}, DATA_DIR / "card1_meta.joblib")
+        df_sorted['card1'] = (df_sorted['card1'] - card1_mean) / card1_std
         
         # Split sorted dataset into equal chunks (or slightly unequal to represent real banks)
         # Bank sizes could be slightly different

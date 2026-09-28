@@ -1,4 +1,6 @@
 import os
+os.environ["PYTHONNOUSERSITE"] = "1"
+
 import threading
 import time
 import torch
@@ -101,6 +103,10 @@ class FederatedLearnerService:
 
     @classmethod
     def _execute_simulation(cls, rounds: int, method: str):
+        # Allow the FastAPI HTTP response to finish and close the socket
+        # before Ray spawns child processes (which could inherit the socket on Windows).
+        time.sleep(2.0)
+        
         db = SessionLocal()
         try:
             log = TrainingLog(level="INFO", message=f"Starting Federated Learning simulation ({method}) for {rounds} rounds.")

@@ -5,8 +5,10 @@ Trust-Aware Federated Fraud Detection System
 Fully self-contained: copies MLP logic directly to avoid flwr/ray/protobuf conflicts.
 Runs all 4 model types and prints actual numeric metrics.
 """
-
 import sys
+# Prevent Python from loading conflicting packages from the user's global site-packages
+sys.path = [p for p in sys.path if not any(x in p for x in ["AppData\\Roaming\\Python", "AppData\\Local\\Python", ".local"])]
+
 import os
 import warnings
 warnings.filterwarnings('ignore')

@@ -4,7 +4,7 @@ import torch
 import numpy as np
 import pandas as pd
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, Depends, UploadFile, File, Form, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import APIRouter, UploadFile, Depends, HTTPException, Form, BackgroundTasks, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from backend.app.core.database import get_db, SessionLocal
 from backend.app.core.config import DATA_DIR, UPLOAD_DIR, DEFAULT_NUM_BANKS
@@ -13,6 +13,7 @@ from backend.app.models.trust import TrustScoreHistory, RoundMetric, TrainingLog
 from backend.app.services.data_loader import DataLoaderService
 from backend.app.services.fraud_detector import FraudDetectorService
 from backend.app.services.federated_learner import FederatedLearnerService
+from backend.app.services.trust_score import TrustScoreService
 from backend.clients.bank_client import FraudMLP
 
 router = APIRouter()
@@ -59,8 +60,13 @@ async def upload_dataset(
         # Split non-IID bank datasets
         loader.split_non_iid_banks(df, num_banks)
 
+        # Generate SMOTE balanced datasets and distribution plots for all banks
+        from backend.app.services.smote_handler import SmoteHandlerService
+        for i in range(1, num_banks + 1):
+            SmoteHandlerService.balance_bank_data(i)
+
         # Log completion
-        log_comp = TrainingLog(level="INFO", message="Dataset preprocessing and multi-bank split completed.")
+        log_comp = TrainingLog(level="INFO", message="Dataset preprocessing, multi-bank split, and SMOTE balancing completed.")
         db.add(log_comp)
         db.commit()
 
@@ -110,6 +116,26 @@ def list_banks(db: Session = Depends(get_db)):
         }
         for b in banks
     ]
+
+
+# Reset Bank Trust Scores Back to Initial 1.000
+@router.post("/banks/reset-trust")
+def reset_bank_trust(db: Session = Depends(get_db)):
+    """
+    Resets all bank trust scores back to initial default 1.000,
+    clears trust score history and internal consistency cache.
+    """
+    db.query(TrustScoreHistory).delete()
+    banks = db.query(Bank).all()
+    for b in banks:
+        b.current_trust_score = 1.0
+        b.local_accuracy = 0.0
+    db.commit()
+    TrustScoreService.clear_cache()
+    return {
+        "status": "success",
+        "message": "All bank trust scores reset to initial state (1.000)."
+    }
 
 
 # 3. Get Specific Bank Trust Score History
@@ -281,12 +307,14 @@ def predict_fraud(transaction: Dict[str, Any], model_type: str = "trust-fl"):
     # Load preprocessing modules
     scaler_file = DATA_DIR / "scaler.joblib"
     encoders_file = DATA_DIR / "encoders.joblib"
+    card1_meta_file = DATA_DIR / "card1_meta.joblib"
 
     if not scaler_file.exists() or not encoders_file.exists():
         raise HTTPException(status_code=400, detail="Preprocessor scaler not found. Please upload dataset first.")
 
     scaler = joblib.load(scaler_file)
     encoders = joblib.load(encoders_file)
+    card1_meta = joblib.load(card1_meta_file) if card1_meta_file.exists() else None
 
     try:
         # Preprocess single record
@@ -319,6 +347,12 @@ def predict_fraud(transaction: Dict[str, Any], model_type: str = "trust-fl"):
 
         # Scale features
         df[numeric_features] = scaler.transform(df[numeric_features])
+
+        # Scale card1 feature
+        if card1_meta:
+            df['card1'] = (df['card1'] - card1_meta['mean']) / card1_meta['std']
+        else:
+            df['card1'] = (df['card1'] - 9500.0) / 4900.0
 
         # Drop ID / targets if any
         X_features = df.drop(columns=['TransactionID', 'isFraud'], errors='ignore')
