@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-main: #f8fafc;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-panel-bg: rgba(255, 255, 255, 0.9);
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --card-border: #e2e8f0;
+    --cyber-grid-line: rgba(15, 23, 42, 0.04);
+  }
+
+  .dark {
+    --bg-main: #0A1628;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-panel-bg: rgba(10, 22, 40, 0.65);
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --cyber-grid-line: rgba(255, 255, 255, 0.015);
+  }
+
+  body {
+    @apply bg-slate-100 text-slate-900 dark:bg-[#0A1628] dark:text-slate-200 min-h-screen overflow-hidden font-sans transition-colors duration-300;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.6);
+}
+
+.scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 4px;
+}
+.dark .scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.6);
+}
+
+/* Glassmorphism panel base utilities */
+.glass-surface {
+  @apply bg-white/80 dark:bg-white/5 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none;
+}
+
+.glass-panel {
+  @apply bg-white/90 dark:bg-[#0A1628]/65 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-md dark:shadow-none;
+}
+
+/* Theme Card base */
+.theme-card {
+  @apply bg-white dark:bg-white/5 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none rounded-2xl transition-all duration-200;
+}
+
+.theme-card-subtle {
+  @apply bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 rounded-xl;
+}
+
+.theme-input {
+  @apply bg-white dark:bg-slate-950/60 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] rounded-xl outline-none transition-all;
+}
+
+/* Glow Utilities */
+.glow-teal {
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+}
+.glow-emerald {
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+}
+.glow-rose {
+  box-shadow: 0 0 15px rgba(255, 77, 77, 0.2);
+}
+.glow-purple {
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+}
+.glow-red {
+  box-shadow: 0 0 15px rgba(255, 77, 77, 0.2);
+}
+
+/* Pulse Glow Animation */
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.8;
+    filter: drop-shadow(0 0 2px currentColor);
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+}
+.pulse-glow-indicator {
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+/* Futuristic Gradient Border */
+.gradient-border-futuristic {
+  position: relative;
+  background: var(--glass-panel-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 1rem;
+}
+.gradient-border-futuristic::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+  padding: 1px;
+  background: linear-gradient(135deg, #00D4FF, #8B5CF6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Cyber grid background layer */
+.cyber-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(var(--cyber-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cyber-grid-line) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Particle Background layer */
+.particle-background {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Monospace Numbers */
+.font-mono-numbers {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+}
